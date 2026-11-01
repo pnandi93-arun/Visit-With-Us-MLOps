@@ -1,0 +1,9 @@
+artifact_location: file:///content/Visit-With-Us-MLOps/mlruns/967154906395991967
+creation_time: 1793554634266
+effective_trace_archival_retention: null
+experiment_id: '967154906395991967'
+last_update_time: 1793554634266
+lifecycle_stage: active
+name: Visit-With-Us-Wellness-Propensity
+trace_location: null
+workspace: default

@@ -1,0 +1,73 @@
+
+name: Visit with Us MLOps Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Validate registered dataset
+        run: python src/ml_pipeline.py validate
+
+  prepare:
+    needs: validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt
+      - name: Prepare train and test datasets
+        run: python src/ml_pipeline.py prepare
+      - name: Upload prepared data artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: prepared-data
+          path: artifacts/
+
+  train:
+    needs: prepare
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt
+      - name: Download prepared data artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: prepared-data
+          path: artifacts/
+      - name: Train, tune and evaluate models
+        run: python src/ml_pipeline.py train
+      - name: Upload model and evaluation artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: trained-model
+          path: |
+            models/best_model.joblib
+            artifacts/training_results.json
+      - name: Commit updated model and metrics to main
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add models/best_model.joblib artifacts/training_results.json
+          git diff --cached --quiet || git commit -m "Update trained model [skip ci]"
+          git push origin HEAD:main
