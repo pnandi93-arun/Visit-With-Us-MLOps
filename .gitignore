@@ -1,0 +1,6 @@
+__pycache__/
+.venv/
+mlruns/
+.DS_Store
+artifacts/train.csv
+artifacts/test.csv
